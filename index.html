@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SOAP Hello UI</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #e0f7fa; margin: 0; padding: 40px;">
+
+  <div style="max-width: 450px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+    
+    <h2 style="text-align: center; color: #006064; margin-bottom: 25px;">Say Hello (SOAP Client)</h2>
+
+    <input type="text" id="nameInput" placeholder="Enter your name"
+           style="width: 100%; padding: 12px 10px; border: 1px solid #b2ebf2; border-radius: 6px; margin-bottom: 15px; font-size: 16px;" />
+
+    <button onclick="callSayHello()"
+            style="width: 100%; padding: 12px; background-color: #00838f; color: white; font-size: 16px;
+                   border: none; border-radius: 6px; cursor: pointer;">
+      Say Hello
+    </button>
+
+    <h3 style="margin-top: 25px; color: #006064;">Response:</h3>
+
+    <pre id="responseBox"
+         style="background-color: #f1f8e9; padding: 12px; border-radius: 6px; font-size: 15px; color: #33691e; min-height: 40px;">
+Waiting for response...</pre>
+  </div>
+
+  <script>
+    async function callSayHello() {
+      const name = document.getElementById("nameInput").value;
+      const url = "http://localhost:8000/wsdl";
+
+      const soapEnvelope = `
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                          xmlns:hel="http://example.com/hello">
+          <soapenv:Header/>
+          <soapenv:Body>
+            <hel:sayHello>
+              <name>${name}</name>
+            </hel:sayHello>
+          </soapenv:Body>
+        </soapenv:Envelope>
+      `;
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/xml;charset=UTF-8",
+            "SOAPAction": "sayHello"
+          },
+          body: soapEnvelope
+        });
+
+        const text = await res.text();
+        console.log("Raw SOAP Response:", text);
+
+        const match = text.match(/<greeting>(.*)<\/greeting>/);
+        const greeting = match ? match[1] : "No greeting found";
+
+        document.getElementById("responseBox").textContent = greeting;
+
+      } catch (error) {
+        document.getElementById("responseBox").textContent = "Error: " + error;
+      }
+    }
+  </script>
+
+</body>
+</html>
